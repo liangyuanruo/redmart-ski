@@ -5,6 +5,7 @@ import numpy as np
 class Path:
 #Helper class for Pathfinding
 
+    #Updates coordinates of a point
     def move(self, pt, direction):
         #pt is a nparray of [row. col]
         #direction N, S, E or W
@@ -19,6 +20,7 @@ class Path:
 
         return pt
 
+    #Check if a point is within bounds
     def within_bounds(self, mapobj, pt):
         
         #mapobj: Instance of Map class
@@ -33,6 +35,7 @@ class Path:
             return False
         return True
 
+    #Compare to heights in the map
     def is_lower(self, mapobj, pt1, pt2):
     #Returns true if height of pt1 is lower than pt2
     #Returns false otherwise
@@ -41,7 +44,13 @@ class Path:
              
             return True
         return False
+    
+    #Compare to heights in the map
+    def height_diff(self, mapobj, pt1, pt2):
+    #Returns height difference between pt1 and pt2
+        return mapobj.get_height(pt1) - mapobj.get_height(pt2)
 
+    #Helper function to detect peaks
     def is_peak(self, mapobj, pt):
         
         #Check if North is lower
@@ -67,10 +76,37 @@ class Path:
             return True
                
         return False
+    
+    #Helper function to detect troughs
+    def is_trough(self, mapobj, pt):
+        
+        #Check if North is lower
+        n_pt = self.move(pt,'N')
+        s_pt = self.move(pt,'S')
+        e_pt = self.move(pt,'E')
+        w_pt = self.move(pt,'W')
 
+        #Check every direction
+        if ( #North
+             self.within_bounds(mapobj, n_pt) and
+             not self.is_lower(mapobj, n_pt, pt ) and
+             #South       
+             self.within_bounds(mapobj, s_pt) and
+             not self.is_lower(mapobj, s_pt, pt ) and
+             #East
+             self.within_bounds(mapobj, e_pt) and
+             not self.is_lower(mapobj, e_pt, pt ) and
+             #West
+             self.within_bounds(mapobj, w_pt) and
+             not self.is_lower(mapobj, w_pt, pt )
+            ):
+            return True
+               
+        return False
 
+    #Find peaks in the Map
     def find_peaks(self, mapobj):
-        peakArray = []
+        peakList = []
 
         MAX_ROW, MAX_COL = mapobj.mapSize[0], mapobj.mapSize[1]
 
@@ -82,9 +118,25 @@ class Path:
 
                 if self.is_peak(mapobj, pt):
                     #Append every peak to 2D array
-                    peakArray.append(pt)
+                    peakList.append(pt)
 
-        return peakArray
+        return peakList
 
+   #Recursive depth-first search
+   def find_longest_path(self, mapobj, pt):
+        #Function returns maximum possible depth
+        #that can be traversed from this point
+        
+        maxDrop = 0
+        maxDir = None
+        dropDict = {} #Store results from exploring each direction
 
+        if self.is_trough(mapobj, pt):
+            return 0 #Can't go anywhere else from here
 
+        #Try to explore north
+        if ( within_bounds(self, mapobj, move(pt,'N') and 
+               is_lower(mapobj, move(pt,'N'),pt) ):
+            dropDict["N"] = find_longest_path(self, mapobj, move(pt,'N'))
+            
+         
