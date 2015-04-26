@@ -118,7 +118,6 @@ class Path:
                 
         
         #Get best direction (k-v pair)
-        #maxDir = max(temp, key=temp.get)
         maxDir = self.get_best_choice(temp)
 
         #Append drop and direction to the return value of recursive call
@@ -135,7 +134,8 @@ class Path:
             pathLen = v[0]
             pathDrop = v[1]
             
-            if pathLen >= bestLen and pathDrop > bestDrop:
+            #Condition to choose the best choice
+            if pathLen > bestLen or (pathLen == bestLen and pathDrop > bestDrop):
                     bestDir = k
                     bestLen = pathLen
                     bestDrop = pathDrop

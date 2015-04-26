@@ -32,12 +32,14 @@ def main():
 
         #Debugging
         #print "------"
-        #print "startPt="+str(pt)
         #print "pathLen="+str(tempPathLength)
         #print "totalDrop="+str(tempTotalDrop)
+        #print "startPt="+str(pt)
+        #print "startHeight="+str(m.get_height(pt))
         #print "dropTuple="+str(tempDropTuple)
         #print "dirTuple="+str(tempDirTuple)
-        
+        #print "path="+str(m.get_path(pt, tempDirTuple))
+
         #If a new maximum is found, update record
         if maxDict["pathLen"] <= tempPathLength and maxDict["totalDrop"] < tempTotalDrop:
             maxDict["startPoint"] = pt
