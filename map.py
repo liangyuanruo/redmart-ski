@@ -38,4 +38,39 @@ class Map:
     
     def get_height( self, pt ):
         return self.mapArray[pt[0]][pt[1]]
+    
+    def move(self, pt, direction):
+        #pt is a nparray of [row. col]
+        #direction N, S, E or W
+        if direction=='N':
+            return pt + np.array([-1,0])
+        elif direction=='S':
+            return pt + np.array([+1,0])
+        elif direction=='E':
+            return pt + np.array([0,+1])
+        elif direction=='W':
+            return pt + np.array([0,-1])
+
+        return pt
    
+
+    def get_path( self, startPt, dirTuple ):
+
+        #Starting height
+        pt = startPt
+        path = ( self.get_height( pt ), )
+
+        #Append new height by following the tuple of directions
+        for d in dirTuple:
+            pt = self.move( pt, d ) #Get next point
+            path = path + ( self.get_height( pt ), )
+
+        return path
+    
+    
+    
+    
+    
+    
+    
+        

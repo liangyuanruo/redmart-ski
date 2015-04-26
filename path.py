@@ -52,57 +52,23 @@ class Path:
 
     #Helper function to detect peaks
     def is_peak(self, mapobj, pt):
-        
-        #Check if North is lower
-        n_pt = self.move(pt,'N')
-        s_pt = self.move(pt,'S')
-        e_pt = self.move(pt,'E')
-        w_pt = self.move(pt,'W')
 
-        #Check every direction
-        if ( #North
-             self.within_bounds(mapobj, n_pt) and
-             self.is_lower(mapobj, n_pt, pt ) and
-             #South       
-             self.within_bounds(mapobj, s_pt) and
-             self.is_lower(mapobj, s_pt, pt ) and
-             #East
-             self.within_bounds(mapobj, e_pt) and
-             self.is_lower(mapobj, e_pt, pt ) and
-             #West
-             self.within_bounds(mapobj, w_pt) and
-             self.is_lower(mapobj, w_pt, pt )
-            ):
-            return True
-               
-        return False
+        for d in ('N','S','E','W'):
+            dirPt = self.move(pt,d)
+            if self.within_bounds(mapobj, dirPt):
+                if self.height_diff(mapobj, dirPt, pt) > 0:
+                    return False
+        return True
     
     #Helper function to detect troughs
     def is_trough(self, mapobj, pt):
         
-        #Check if North is lower
-        n_pt = self.move(pt,'N')
-        s_pt = self.move(pt,'S')
-        e_pt = self.move(pt,'E')
-        w_pt = self.move(pt,'W')
-
-        #Check every direction
-        if ( #North
-             self.within_bounds(mapobj, n_pt) and
-             not self.is_lower(mapobj, n_pt, pt ) and
-             #South       
-             self.within_bounds(mapobj, s_pt) and
-             not self.is_lower(mapobj, s_pt, pt ) and
-             #East
-             self.within_bounds(mapobj, e_pt) and
-             not self.is_lower(mapobj, e_pt, pt ) and
-             #West
-             self.within_bounds(mapobj, w_pt) and
-             not self.is_lower(mapobj, w_pt, pt )
-            ):
-            return True
-               
-        return False
+        for d in ('N','S','E','W'):
+            dirPt = self.move(pt,d)
+            if self.within_bounds(mapobj, dirPt):
+                if self.height_diff(mapobj, dirPt, pt) < 0:
+                    return False
+        return True
 
     #Find peaks in the Map
     def find_peaks(self, mapobj):
@@ -114,7 +80,7 @@ class Path:
         for i in range(0,MAX_ROW):
             for j in range(0,MAX_COL):
 
-                pt = np.array([ i, j]) #Create a point
+                pt = np.array([ i, j ]) #Create a point
 
                 if self.is_peak(mapobj, pt):
                     #Append every peak to 2D array
@@ -122,21 +88,57 @@ class Path:
 
         return peakList
 
-   #Recursive depth-first search
-   def find_longest_path(self, mapobj, pt):
+   #Recursive depth-first search from a point on the map
+    def find_longest_path(self, mapobj, pt):
         #Function returns maximum possible depth
-        #that can be traversed from this point
+        #that can be traversed from this point     
+        #Input: Map, Current Point
+        #Output: List of steps to take, drop at every step
+
+        temp, stepResult, stepHeightDiff = {},{},{}
+
+        #print "pt="+str(pt)
+        #print "self.istrough()="+str(self.is_trough(mapobj,pt))
         
-        maxDrop = 0
-        maxDir = None
-        dropDict = {} #Store results from exploring each direction
+        if ( self.is_trough(mapobj,pt) ):
+            return ((),()) # (Drop, Direction) 
 
-        if self.is_trough(mapobj, pt):
-            return 0 #Can't go anywhere else from here
 
-        #Try to explore north
-        if ( within_bounds(self, mapobj, move(pt,'N') and 
-               is_lower(mapobj, move(pt,'N'),pt) ):
-            dropDict["N"] = find_longest_path(self, mapobj, move(pt,'N'))
+        #Try to explore each direction
+        for stepDir in ('N','S','E','W'):
+
+            #If direction is lower than current step
+            if ( self.within_bounds( mapobj, self.move(pt,stepDir) ) and
+                 self.height_diff(mapobj, self.move(pt,stepDir), pt) < 0):
+
+                #Find out what is total drop in that direction dir = height_diff + find_longest path
+                stepResult[stepDir] = self.find_longest_path( mapobj, self.move( pt,stepDir ) ) #e.g. ((1,2),('N','E'))
+                stepHeightDiff[stepDir] = self.height_diff( mapobj, pt, self.move( pt,stepDir ) ) #Integer
+                temp[stepDir] =  ( len(stepResult[stepDir][0]) + 1, sum(stepResult[stepDir][0]) ) #Store total length & drop in each dir
+                
+        
+        #Get best direction (k-v pair)
+        #maxDir = max(temp, key=temp.get)
+        maxDir = self.get_best_choice(temp)
+
+        #Append drop and direction to the return value of recursive call
+        dropTuple = (stepHeightDiff[maxDir],) + stepResult[maxDir][0]
+        dirTuple = (maxDir,) + stepResult[maxDir][1] 
+
+        return (dropTuple, dirTuple)
+
+
+    def get_best_choice(self, temp):
+        bestDir, bestLen, bestDrop = None, None, None
+
+        for k,v in temp.iteritems():
+            pathLen = v[0]
+            pathDrop = v[1]
             
-         
+            if pathLen >= bestLen and pathDrop > bestDrop:
+                    bestDir = k
+                    bestLen = pathLen
+                    bestDrop = pathDrop
+
+        return bestDir
+
